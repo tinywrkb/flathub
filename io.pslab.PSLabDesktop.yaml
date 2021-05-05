@@ -62,16 +62,20 @@ modules:
       - npm run pack
       #- npm run build:electron -- --linux tar.gz
       - cp -r dist/linux-unpacked /app/pslab
-      - rm /app/pslab/chrome-sandbox
-      - install -Dm755 stub_sandbox /app/pslab/chrome-sandbox
-      - install -Dm755 pslab-desktop -t /app/bin/
       - install -Dm644 public/app_icon.png /app/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
-      - install -Dm644 ${FLATPAK_ID}.desktop -t /app/share/applications/
     sources:
       - type: archive
         url: https://github.com/fossasia/pslab-desktop/archive/v2.8.1.tar.gz
         sha256: 05e11c54260058b13884a48b62446d47d116a895816e31ce50610d752c13d648
       - generated-sources.json
+  - name: package
+    buildsystem: simple
+    build-commands:
+      - rm /app/pslab/chrome-sandbox
+      - install -Dm755 stub_sandbox /app/pslab/chrome-sandbox
+      - install -Dm755 pslab-desktop -t /app/bin/
+      - install -Dm644 ${FLATPAK_ID}.desktop -t /app/share/applications/
+    sources:
       - type: script
         dest-filename: stub_sandbox
         commands:
