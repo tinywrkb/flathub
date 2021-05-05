@@ -1,0 +1,67 @@
+app-id: io.pslab.PSLabDesktop
+runtime: org.freedesktop.Platform
+runtime-version: '20.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '20.08'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node14
+separate-locales: false
+command: pslab
+finish-args:
+  - --device=all
+  - --device=dri
+  - --filesystem=home
+  - --filesystem=host
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=x11
+  - --system-talk-name=org.freedesktop.Avahi
+  - --talk-name=com.canonical.AppMenu.Registrar
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+build-options:
+  env:
+    - LAPACK=/app/lib
+    - BLAS=/app/lib
+modules:
+  - name: lapack
+    buildsystem: cmake
+    builddir: true
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCBLAS=ON
+    sources:
+      - type: archive
+        url: https://github.com/Reference-LAPACK/lapack/archive/v3.9.1.tar.gz
+        sha256: d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0
+  - python-dependencies.json
+  - name: pslab
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node14/bin
+      env:
+        HUSKY: '0'
+        # Electron get cache dir, with downloaded electron by node-gen
+        XDG_CACHE_HOME: /run/build/pslab/flatpak-node/cache
+        npm_config_cache: /run/build/pslab/flatpak-node/npm-cache
+        npm_config_nodedir: /usr/lib/sdk/node14
+        npm_config_offline: 'true'
+        npm_config_no_save: 'true'
+        npm_config_loglevel: silly
+    build-commands:
+      - npm install
+      - mkdir -p packages/app-desktop/dist && touch packages/app-desktop/dist/AppImage
+      - |
+        . flatpak-node/electron-builder-arch-args.sh
+        cd packages/app-desktop
+        npm run dist -- $ELECTRON_BUILDER_ARCH_ARGS --dir --linux dir
+      - |
+        cd packages/app-desktop
+        cp -r dist/linux*unpacked /app/pslab-desktop
+    sources:
+      - type: archive
+        url: https://github.com/fossasia/pslab-desktop/archive/v2.8.1.tar.gz
+        sha256: 05e11c54260058b13884a48b62446d47d116a895816e31ce50610d752c13d648
+      - generated-sources.json
