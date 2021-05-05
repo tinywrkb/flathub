@@ -1,0 +1,7 @@
+#!/bin/bash
+
+flatpak run \
+  --filesystem=$PWD \
+  --command=flatpak-node-generator.py \
+  io.github.flatpak.flatpak-builder-tools \
+  npm package-lock.json
