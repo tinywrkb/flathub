@@ -47,21 +47,31 @@ modules:
         XDG_CACHE_HOME: /run/build/pslab/flatpak-node/cache
         npm_config_cache: /run/build/pslab/flatpak-node/npm-cache
         npm_config_nodedir: /usr/lib/sdk/node14
-        npm_config_offline: 'true'
+        # TODO: fix offline installation
+        #npm_config_offline: 'true'
         npm_config_no_save: 'true'
         npm_config_loglevel: silly
+      build-args:
+        - --share=network
     build-commands:
+      # workaround to regenerate package-lock.json as the upstream breaks the build process
+#     - rm package-lock.json
+#     - npm cache clean --force
       - npm install
-      - mkdir -p packages/app-desktop/dist && touch packages/app-desktop/dist/AppImage
-      - |
-        . flatpak-node/electron-builder-arch-args.sh
-        cd packages/app-desktop
-        npm run dist -- $ELECTRON_BUILDER_ARCH_ARGS --dir --linux dir
-      - |
-        cd packages/app-desktop
-        cp -r dist/linux*unpacked /app/pslab-desktop
+      - npm run build
+      - npm run pack
+#     - npm run build:electron -- --linux tar.gz
+      - cp -r dist/linux-unpacked /app/pslab
+      - rm /app/pslab/chrome-sandbox
+      - install -Dm755 stub_sandbox /app/pslab/chrome-sandbox
     sources:
       - type: archive
         url: https://github.com/fossasia/pslab-desktop/archive/v2.8.1.tar.gz
         sha256: 05e11c54260058b13884a48b62446d47d116a895816e31ce50610d752c13d648
       - generated-sources.json
+      - type: script
+        dest-filename: stub_sandbox
+        commands:
+          - |
+              echo Stub sandbox ignoring command: $@
+              exit 1
