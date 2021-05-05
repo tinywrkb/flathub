@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PSLab Desktop
+GenericName=PSLab Desktop
+Comment=Desktop application for the Pocket Science Lab open hardware platform
+Exec=pslab-desktop
+Icon=io.pslab.PSLabDesktop
+Terminal=false
+Categories=Science
