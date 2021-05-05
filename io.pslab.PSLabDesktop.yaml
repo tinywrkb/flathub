@@ -21,6 +21,10 @@ finish-args:
   #- --socket=fallback-x11
   #- --socket=wayland
   - --socket=x11
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
 build-options:
   env:
     - LAPACK=/app/lib
@@ -42,25 +46,24 @@ modules:
     build-options:
       append-path: /usr/lib/sdk/node14/bin
       env:
-        HUSKY: '0'
-        # Electron get cache dir, with downloaded electron by node-gen
-        XDG_CACHE_HOME: /run/build/pslab/flatpak-node/cache
         npm_config_cache: /run/build/pslab/flatpak-node/npm-cache
         npm_config_nodedir: /usr/lib/sdk/node14
         # TODO: fix offline installation
+        # disable this to enable online build
         #npm_config_offline: 'true'
         npm_config_no_save: 'true'
         npm_config_loglevel: silly
+      # TODO: fix offline installation
       build-args:
         - --share=network
     build-commands:
-      # workaround to regenerate package-lock.json as the upstream breaks the build process
+      # workaround to regenerate package-lock.json as the upstream one breaks the build process
       #- rm package-lock.json
       #- npm cache clean --force
+      #- npm install --package-lock-only --only=production
       - npm install
       - npm run build
       - npm run pack
-      #- npm run build:electron -- --linux tar.gz
       - cp -r dist/linux-unpacked /app/pslab
       - install -Dm644 public/app_icon.png /app/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
     sources:
