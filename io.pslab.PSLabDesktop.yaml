@@ -15,12 +15,12 @@ finish-args:
   - --filesystem=host
   - --share=ipc
   - --share=network
-  - --socket=wayland
+  - --socket=pulseaudio
+  # needs electron v11 (chromium v87) or newer with ozone enabled
+  # https://github.com/electron/electron/issues/10915
+  #- --socket=fallback-x11
+  #- --socket=wayland
   - --socket=x11
-  - --system-talk-name=org.freedesktop.Avahi
-  - --talk-name=com.canonical.AppMenu.Registrar
-  - --talk-name=org.freedesktop.Notifications
-  - --talk-name=org.kde.StatusNotifierWatcher
 build-options:
   env:
     - LAPACK=/app/lib
@@ -55,8 +55,8 @@ modules:
         - --share=network
     build-commands:
       # workaround to regenerate package-lock.json as the upstream breaks the build process
-#     - rm package-lock.json
-#     - npm cache clean --force
+      #- rm package-lock.json
+      #- npm cache clean --force
       - npm install
       - npm run build
       - npm run pack
