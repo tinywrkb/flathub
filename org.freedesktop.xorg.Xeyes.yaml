@@ -1,0 +1,50 @@
+app-id: org.freedesktop.xorg.Xeyes
+runtime: org.freedesktop.Platform
+runtime-version: '20.08'
+sdk: org.freedesktop.Sdk
+command: xeyes
+finish-args:
+  - --device=dri
+  - --share=ipc
+  - --socket=x11
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - '*.a'
+  - '*.la'
+modules:
+  - name: xeyes
+    post-install:
+      - install -Dm644 ${FLATPAK_ID}.desktop -t /app/share/applications/
+      - install -Dm644 ${FLATPAK_ID}.svg -t /app/share/icons/hicolor/scalable/apps/
+      - install -Dm644 ${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo/
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/archive/individual/app/xeyes-1.1.2.tar.bz2
+        sha256: 57bcec0d2d167af9e5d44d0dbd74c6d7c0f0591cd0608952b23c749fdd910553
+        x-checker-data:
+            type: anitya
+            project-id: 15025
+            stable-only: true
+            url-template: https://xorg.freedesktop.org/archive/individual/app/xeyes-$version.tar.bz2
+      - type: file
+        path: org.freedesktop.xorg.Xeyes.desktop
+      - type: file
+        # source: https://commons.wikimedia.org/wiki/File:X.Org_Logo.svg
+        # license: CC BY-SA 3.0
+        path: org.freedesktop.xorg.Xeyes.svg
+      - type: file
+        path: org.freedesktop.xorg.Xeyes.metainfo.xml
+    modules:
+      - name: libxmu
+        config-opts:
+          - --sysconfdir=/app/etc
+        sources:
+          - type: archive
+            url: https://xorg.freedesktop.org/releases/individual/lib/libXmu-1.1.3.tar.bz2
+            sha256: 9c343225e7c3dc0904f2122b562278da5fed639b1b5e880d25111561bac5b731
+            x-checker-data:
+                type: anitya
+                project-id: 1785
+                stable-only: true
+                url-template: https://xorg.freedesktop.org/releases/individual/lib/libXmu-$version.tar.bz2

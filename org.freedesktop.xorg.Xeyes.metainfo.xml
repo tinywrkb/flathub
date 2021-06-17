@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.freedesktop.xorg.Xeyes</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>Xeyes</name>
+  <summary>A "follow the mouse" X demo, using the X SHAPE extension</summary>
+  <description>
+    <p>
+      Xeyes watches what you do and reports to the Boss.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.freedesktop.xorg.Xeyes.desktop</launchable>
+  <url type="homepage">https://gitlab.freedesktop.org/xorg/app/xeyes</url>
+  <developer_name>Keith Packard</developer_name>
+  <developer_name>The X.Org Foundation</developer_name>
+  <releases>
+    <release version="1.1.2" date="2018-03-10"/>
+  </releases>
+  <content_rating type="oars-1.0"/>
+</component>
