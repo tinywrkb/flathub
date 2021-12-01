@@ -1,0 +1,30 @@
+app-id: io.github.mortbopet.Ripes
+runtime: org.kde.Platform
+runtime-version: 5.15-21.08
+sdk: org.kde.Sdk
+command: Ripes
+rename-desktop-file: Ripes.desktop
+rename-icon: Ripes
+finish-args:
+  - --device=dri
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --socket=x11
+modules:
+  - name: ripes
+    buildsystem: cmake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: git
+        url: https://github.com/mortbopet/Ripes.git
+        commit: 31a1b9c0c7cdedbc93589d68dcb4495e2780a558
+        x-checker-data:
+          is-main-source: true
+          type: anitya
+          project-id: 241361
+          stable-only: true
+          versions:
+            '>': '2.2.3'
+          tag-template: v$version
