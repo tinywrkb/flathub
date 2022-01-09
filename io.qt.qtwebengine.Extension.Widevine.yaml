@@ -1,0 +1,38 @@
+id: io.qt.qtwebengine.Extension.Widevine
+branch: 5.15-21.08
+runtime: io.qt.qtwebengine.BaseApp
+runtime-version: 5.15-21.08
+sdk: org.kde.Sdk
+build-extension: true
+separate-locales: false
+appstream-compose: false
+build-options:
+  cflags: -I/app/qtwebengine/extensions/Widevine/include
+  cxxflags: -I/app/qtwebengine/extensions/Widevine/include
+  ldflags: -L/app/qtwebengine/extensions/Widevine/lib
+  prefix: /app/qtwebengine/extensions/Widevine
+  prepend-path: /app/qtwebengine/extensions/Widevine/bin
+  prepend-ld-library-path: /app/qtwebengine/extensions/Widevine/lib
+  prepend-pkg-config-path: /app/qtwebengine/extensions/Widevine/lib/pkgconfig
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+modules:
+  - name: widevine
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 apply_extra -t ${FLATPAK_DEST}/bin
+    sources:
+      - type: extra-data
+        filename: widevinecdm-linux.zip
+        url: https://dl.google.com/widevine-cdm/4.10.2391.0-linux-x64.zip
+        sha256: ee01fcd3c0baee6fecd3d7b8ad05101dbfedfa21957735be633ac1d59c4621da
+        size: 6328796
+      - type: script
+        dest-filename: apply_extra
+        commands:
+          - bsdtar -xf widevinecdm-linux.zip
+          - rm -f widevinecdm-linux.zip
+          - install -dm755 _platform_specific/linux_x64
+          - mv libwidevinecdm.so _platform_specific/linux_x64/
