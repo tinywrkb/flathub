@@ -59,33 +59,34 @@ modules:
           - aarch64
         commands:
           # TODO: read part table
-          - bsdtar -Oxf cros-recovery.zip 2>/dev/null | dd of=cros.rootfs iflag=fullblock conv=noerror bs=512 skip=1286144 count=4915200
-          - /app/lib/x86_64-linux-gnu/p7zip/7z e cros.rootfs opt/google/chrome/libwidevinecdm.so
+          - bsdtar -Oxf cros-recovery.zip 2>/dev/null | dd of=cros.rootfs iflag=fullblock conv=noerror bs=512 skip=1286144 count=4915200 &>/dev/null
+          - /app/lib/x86_64-linux-gnu/p7zip/7z e cros.rootfs opt/google/chrome/libwidevinecdm.so &>/dev/null
           - rm -f cros-recovery.zip cros.rootfs
           - install -dm755 _platform_specific/linux_arm64
           - mv libwidevinecdm.so _platform_specific/linux_arm64/
-  - name: p7zip
-    only-arches:
-      - aarch64
-    no-autogen: true
-    make-args:
-      - 7z
-    make-install-args:
-      - DEST_DIR=/
-      - DEST_HOME=${FLATPAK_DEST}
-      - DEST_MAN=${FLATPAK_DEST}/share/man
-      - DEST_SHARE=${FLATPAK_DEST}/lib/${FLATPAK_ARCH}-linux-gnu/p7zip
-    sources:
-      - type: archive
-        url: https://github.com/jinfeihan57/p7zip/archive/eb1bbb0d0327a103850fec519015986e72a1ebf0.tar.gz
-        sha256: cecdaa7e2738ad4594ddddb0c568db1750b7a7ff8433961be8595033d444e3a7
-        x-checker-data:
-          type: anitya
-          project-id: 2583
-          stable-only: true
-          versions:
-            '>': '17.04'
-          url-template: https://github.com/jinfeihan57/p7zip/archive/v$version/p7zip-$version.tar.gz
-    cleanup:
-      - /bin
-      - /share
+    modules:
+      - name: p7zip
+        only-arches:
+          - aarch64
+        no-autogen: true
+        make-args:
+          - 7z
+        make-install-args:
+          - DEST_DIR=/
+          - DEST_HOME=${FLATPAK_DEST}
+          - DEST_MAN=${FLATPAK_DEST}/share/man
+          - DEST_SHARE=${FLATPAK_DEST}/lib/${FLATPAK_ARCH}-linux-gnu/p7zip
+        sources:
+          - type: archive
+            url: https://github.com/jinfeihan57/p7zip/archive/eb1bbb0d0327a103850fec519015986e72a1ebf0.tar.gz
+            sha256: cecdaa7e2738ad4594ddddb0c568db1750b7a7ff8433961be8595033d444e3a7
+            x-checker-data:
+              type: anitya
+              project-id: 2583
+              stable-only: true
+              versions:
+                '>': '17.04'
+              url-template: https://github.com/jinfeihan57/p7zip/archive/v$version/p7zip-$version.tar.gz
+        cleanup:
+          - /bin
+          - /share
