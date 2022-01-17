@@ -46,7 +46,7 @@ modules:
         only-arches:
           - aarch64
         # Acer Chromebook 514 (Spherion) recovery image
-        # Version: 96.0.4664.111, Platform version: 14268.67.0
+        # WidevineCdm version: 4.10.2391.0, Chrome version: 96.0.4664.111, Platform version: 14268.67.0
         # https://www.chromium.org/chromium-os/developer-information-for-chrome-os-devices
         # https://cros-updates-serving.appspot.com/
         # https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf
