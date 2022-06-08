@@ -1,0 +1,232 @@
+{
+    "name": "ffmpeg",
+    "config-opts": [
+        "--enable-gpl",
+        "--enable-version3",
+        "--disable-static",
+        "--enable-shared",
+        "--disable-doc",
+        "--enable-postproc",
+        "--enable-pthreads",
+        "--enable-gnutls",
+        "--enable-libdav1d",
+        "--enable-libfontconfig",
+        "--enable-libfreetype",
+        "--enable-libfribidi",
+        "--enable-libjack",
+        "--enable-libopenjpeg",
+        "--enable-libopus",
+        "--enable-libpulse",
+        "--enable-librsvg",
+        "--enable-libspeex",
+        "--enable-libv4l2",
+        "--enable-libx264",
+        "--enable-libx265",
+        "--enable-libxml2",
+        "--disable-libmfx",
+        "--enable-lto",
+        "--disable-debug",
+        "--disable-stripping"
+    ],
+    "sources": [
+        {
+            "type": "archive",
+            "url": "https://ffmpeg.org/releases/ffmpeg-4.4.tar.xz",
+            "sha256": "06b10a183ce5371f915c6bb15b7b1fffbe046e8275099c96affc29e17645d909",
+            "x-checker-data": {
+                "type": "anitya",
+                "project-id": 5405,
+                "stable-only": true,
+                "url-template": "https://ffmpeg.org/releases/ffmpeg-$version.tar.xz"
+            }
+        }
+    ],
+    "cleanup": [
+        "/share/ffmpeg/examples"
+    ],
+    "modules": [
+        {
+            "name": "pipewire-jack-runtime",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm644 *.h -t ${FLATPAK_DEST}/include/jack/",
+                "sed -i \"s|@@PREFIX@@|\"${FLATPAK_DEST}\"|;s|@@ARCH@@|\"${FLATPAK_ARCH}\"|\" pipewire-jack-runtime.pc",
+                "_LIBDIR=${FLATPAK_DEST}/lib; [ ${FLATPAK_DEST} == '/usr' ] && _LIBDIR+=/${FLATPAK_ARCH}-linux-gnu; install -Dm644 pipewire-jack-runtime.pc ${_LIBDIR}/pkgconfig/jack.pc"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/jackaudio/headers",
+                    "branch": "master",
+                    "commit": "4e53c8f0a33e9ed87eac5ca6e578b7ee92a1fd3d"
+                },
+                {
+                    "type": "file",
+                    "path": "pipewire-jack-runtime.pc"
+                }
+            ]
+        },
+        {
+            "name": "ffnvcodec-headers",
+            "no-autogen": true,
+            "make-install-args": [
+                "PREFIX=${FLATPAK_DEST}"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://git.videolan.org/git/ffmpeg/nv-codec-headers.git",
+                    "tag": "n11.1.5.1",
+                    "commit": "84483da70d903239d4536763fde8c7e6c4e80784",
+                    "x-checker-data": {
+                        "type": "anitya",
+                        "project-id": 223796,
+                        "stable-only": true,
+                        "tag-template": "n$version"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "libv4l",
+            "cleanup": [
+                "/bin",
+                "/share/man"
+            ],
+            "config-opts": [
+                "--sbindir=${FLATPAK_DEST}/bin",
+                "--disable-static",
+                "--with-udevdir=${FLATPAK_DEST}/lib/udev"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.22.1.tar.bz2",
+                    "sha256": "65c6fbe830a44ca105c443b027182c1b2c9053a91d1e72ad849dfab388b94e31",
+                    "x-checker-data": {
+                        "type": "anitya",
+                        "project-id": 9998,
+                        "stable-only": true,
+                        "url-template": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-$version.tar.bz2"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "x264",
+            "config-opts": [
+                "--enable-shared",
+                "--enable-pic",
+                "--enable-lto",
+                "--disable-avs"
+            ],
+            "make-install-args": [
+                "install-cli",
+                "install-lib-shared"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://code.videolan.org/videolan/x264.git",
+                    "branch": "master",
+                    "commit": "baee400fa9ced6f5481a728138fed6e867b0ff7f"
+                }
+            ]
+        },
+        {
+            "name": "x265",
+            "subdir": "source",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DENABLE_SHARED=TRUE",
+                "-DENABLE_HDR10_PLUS=TRUE'",
+                "-DEXTRA_LIB='x265_main10.a;x265_main12.a'",
+                "-DEXTRA_LINK_FLAGS='-L .'",
+                "-DLINKED_10BIT=TRUE",
+                "-DLINKED_12BIT=TRUE",
+                "-Wno-dev"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz",
+                    "sha256": "e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8",
+                    "x-checker-data": {
+                        "type": "anitya",
+                        "project-id": 5405,
+                        "stable-only": true,
+                        "url-template": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_$version.tar.gz"
+                    }
+                },
+                {
+                    "type": "shell",
+                    "commands": [
+                        "cp ${FLATPAK_DEST}/lib/libx265_main1{0,2}.a ./"
+                    ]
+                }
+            ],
+            "modules": [
+                {
+                    "name": "libx265-main10",
+                    "subdir": "source",
+                    "buildsystem": "cmake-ninja",
+                    "config-opts": [
+                        "-DENABLE_SHARED=FALSE",
+                        "-DEXPORT_C_API=FALSE",
+                        "-DENABLE_CLI=FALSE",
+                        "-DHIGH_BIT_DEPTH=TRUE",
+                        "-DMAIN12=FALSE",
+                        "-Wno-dev"
+                    ],
+                    "no-make-install": true,
+                    "build-commands": [
+                        "install -Dm644 libx265.a ${FLATPAK_DEST}/lib/libx265_main10.a"
+                    ],
+                    "sources": [
+                        {
+                            "type": "archive",
+                            "url": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz",
+                            "sha256": "e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8",
+                            "x-checker-data": {
+                                "type": "anitya",
+                                "project-id": 5405,
+                                "stable-only": true,
+                                "url-template": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_$version.tar.gz"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "libx265-main12",
+                    "subdir": "source",
+                    "buildsystem": "cmake-ninja",
+                    "config-opts": [
+                        "-DENABLE_SHARED=FALSE",
+                        "-DEXPORT_C_API=FALSE",
+                        "-DENABLE_CLI=FALSE",
+                        "-DHIGH_BIT_DEPTH=TRUE",
+                        "-DMAIN12=TRUE",
+                        "-Wno-dev"
+                    ],
+                    "no-make-install": true,
+                    "build-commands": [
+                        "install -Dm644 libx265.a ${FLATPAK_DEST}/lib/libx265_main12.a"
+                    ],
+                    "sources": [
+                        {
+                            "type": "archive",
+                            "url": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz",
+                            "sha256": "e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8",
+                            "x-checker-data": {
+                                "type": "anitya",
+                                "project-id": 5405,
+                                "stable-only": true,
+                                "url-template": "https://bitbucket.org/multicoreware/x265_git/downloads/x265_$version.tar.gz"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

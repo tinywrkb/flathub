@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Sunshine
+GenericName=Remote Desktop
+Comment=Host for Moonlight Streaming Client
+Icon=com.github.sunshinestream.Sunshine
+Exec=sunshine
+Terminal=true
+Categories=Utility;
+Keywords=Games;GPU;Graphics;Streaming;AMD;Intel;NVIDIA:Radeon;Geforce

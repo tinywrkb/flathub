@@ -1,0 +1,142 @@
+app-id: com.github.sunshinestream.Sunshine
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+command: sunshine
+finish-args:
+  - --device=all
+  - --device=dri
+  - --persist=.config/sunshine
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --socket=system-bus
+  - --socket=wayland
+  - --socket=x11
+cleanup:
+  - /etc
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /lib/udev
+  - /share/doc
+  - /share/man
+  - '*.a'
+  - '*.la'
+modules:
+  - name: sunshine
+    builddir: true
+    build-options:
+      cxxflags: -I/app/include/libevdev-1.0
+    buildsystem: cmake
+    config-opts:
+      - -DBoost_USE_STATIC_RUNTIME=ON
+      - -DSUNSHINE_ENABLE_DRM=OFF
+      - -DSUNSHINE_ENABLE_X11=ON
+      - -DSUNSHINE_ENABLE_WAYLAND=ON
+      - -DSUNSHINE_ENABLE_CUDA=ON
+      - -DSUNSHINE_ASSETS_DIR=/app/share/sunshine
+      # /var/config -> ${XDG_CONFIG_HOME}
+      # not under a dedicated sunshine folder, as the app doesn't create automatically and fails to start
+      - -DSUNSHINE_CONFIG_DIR=/var/config
+      - -DSUNSHINE_EXECUTABLE_PATH=/app/bin/sunshine
+      - -Wno-dev
+    no-make-install: true
+    build-commands:
+      - install -Dm755 sunshine -t ${FLATPAK_DEST}/bin/
+      - install -Dm644 ../assets/{apps_linux.json,sunshine.conf} -t ${FLATPAK_DEST}/share/sunshine/
+      - install -Dm644 ../assets/shaders/opengl/* -t ${FLATPAK_DEST}/share/sunshine/shaders/opengl/
+      - install -Dm644 ../assets/web/*.html -t ${FLATPAK_DEST}/share/sunshine/web/
+      - install -Dm644 ../assets/web/third_party/* -t ${FLATPAK_DEST}/share/sunshine/web/third_party/
+      - install -Dm644 ../${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications/
+      - install -Dm644 ../sunshine.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+    sources:
+      - type: git
+        url: https://github.com/SunshineStream/Sunshine
+        branch: nightly
+       #tag: v0.13.0
+       #commit: 4b658cd86ba0b7520f6f7cb5b5f07d6775845a81
+        x-checker-data:
+          is-main-source: true
+          type: anitya
+          project-id: 236300
+          stable-only: true
+          tag-template: v$version
+      - type: shell
+        commands:
+          - sed -i 's/stdc++fs/stdc++/' CMakeLists.txt
+      - type: file
+        path: com.github.sunshinestream.Sunshine.desktop
+
+    modules:
+      - name: libavahi
+        config-opts:
+          - --disable-glib
+          - --disable-gobject
+          - --disable-gtk3
+          - --disable-libevent
+          - --disable-qt5
+          - --disable-static
+          - --enable-dbus
+          - --disable-gdbm
+          - --disable-libdaemon
+          - --disable-python
+          - --disable-mono
+          - --disable-autoipd
+          - --disable-manpages
+          - --with-distro=none
+        cleanup:
+          - /bin
+          - /lib/avahi
+          - /share/man
+        sources:
+          - type: archive
+            url: https://github.com/lathiat/avahi/archive/fd482a74625b8db8547b8cfca3ee3d3c6c721423.tar.gz
+            sha256: beb9bba4b3a1b80cc2e60aff3589a2fd36e35832b34d5e1168a464c890ca429a
+            x-checker-data:
+              type: anitya
+              project-id: 147
+              stable-only: true
+              versions:
+                '>': '0.8'
+              url-template: https://github.com/lathiat/avahi/archive/v$version/avahi-$version.tar.gz
+
+      - name: boost
+        buildsystem: simple
+        build-commands:
+          - ./bootstrap.sh
+          - ./b2 --with-log --with-system variant=release debug-symbols=off link=static runtime-link=static
+            --prefix=${FLATPAK_DEST} install
+        sources:
+          - type: archive
+            url: https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
+            sha256: 475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39
+            x-checker-data:
+              type: anitya
+              project-id: 6845
+              stable-only: true
+              url-template: https://boostorg.jfrog.io/artifactory/main/release/$major.$minor.$patch/source/boost_${major}_${minor}_$patch.tar.bz2
+
+      # TODO: might be able to switch to the ffmpeg-full extension when ffmpeg will have hevc encoder, see config
+      #  - https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/extensions/ffmpeg-full/ffmpeg.bst
+      #  - https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/include/ffmpeg.yml
+      - ffmpeg.json
+
+      - name: libevdev
+        buildsystem: meson
+        config-opts:
+          - -Dtests=disabled
+          - -Ddocumentation=disabled
+        sources:
+          - type: archive
+            url: https://freedesktop.org/software/libevdev/libevdev-1.12.0.tar.xz
+            sha256: 2f729e3480695791f9482e8388bd723402b89f0eaf118057bbdea3cecee9b237
+            x-checker-data:
+              type: anitya
+              project-id: 20540
+              stable-only: true
+              url-template: https://freedesktop.org/software/libevdev/libevdev-$version.tar.xz
+        cleanup:
+          - /bin
+          - /share/man
