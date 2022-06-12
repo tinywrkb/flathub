@@ -146,15 +146,6 @@ modules:
           - /bin
           - /share/doc
           - /share/man
-#     - name: mlton
-#       # TODO: add module? how to bootstrap on aarch without remote?
-#       no-autogen: true
-#       make-args:
-#         - BOOTSTRAP_STYLE=1
-#       sources:
-#         - type: archive
-#           url: https://github.com/MLton/mlton/archive/refs/tags/on-20201002-release.tar.gz
-#           sha256: 630839fea71586ffa77f06962cec323227b8b7913992d04126563e07bdbbafaa
       - name: portaudio
         # TODO: after the cpp bindings split, switch to cmake, drop makeflag, and add a separate module for cpp bindings, see https://github.com/PortAudio/portaudio/issues/548
         config-opts:
