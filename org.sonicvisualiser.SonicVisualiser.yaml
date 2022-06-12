@@ -1,0 +1,251 @@
+# TODO: re-check if all modules needed
+# TODO: figure out how best to handle vamp plugins, see also tenacity's packaging
+#       - https://github.com/tenacityteam/tenacity/issues/25
+#       - https://github.com/tenacityteam/tenacity-flatpak-nightly
+#       - https://github.com/c4dm/vamp-plugin-sdk
+# TODO: pipewire: add socket for jack?, needs updating pipewire access prop?
+# TODO: check qfiledialog usage and issues
+# TODO: evaluate plugins, do they need x11? support ladspa and dssi plugins?
+# TODO: portaudio server access? socket?
+# TODO: monitor dbus access and add proper permissions
+# TODO: do we actually need netowrking? "Open Location..."?
+# TODO: add metainfo
+# TODO: fedc: avoid rebuilding on non important module updates, see https://github.com/flathub/flatpak-external-data-checker/pull/276
+app-id: org.sonicvisualiser.SonicVisualiser
+runtime: org.kde.Platform
+runtime-version: 5.15-21.08
+sdk: org.kde.Sdk
+command: sonic-visualiser
+rename-desktop-file: sonic-visualiser.desktop
+rename-icon: sonic-visualiser
+finish-args:
+  - --device=dri
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --socket=wayland
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/info
+  - '*.a'
+  - '*.la'
+modules:
+  - name: sonic-visualiser
+    buildsystem: meson
+    sources:
+      - type: archive
+        url: https://github.com/sonic-visualiser/sonic-visualiser/releases/download/sv_v4.5/sonic-visualiser-4.5.tar.gz
+        sha256: c57b8277b51e7b0accdc6c3b5a575d3961b43ed9e5e0661e053a6ac388ab82a3
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/sonic-visualiser/sonic-visualiser/releases/latest
+          version-query: .tag_name | sub("^sv_v"; "")
+          url-query: .assets[] | select(.name=="sonic-visualiser-" + $version + ".tar.gz") | .browser_download_url
+    modules:
+      - shared-modules/libmad/libmad.json
+      - shared-modules/linux-audio/fftw3f.json
+      - shared-modules/linux-audio/liblo.json
+      - name: capnproto
+        buildsystem: cmake
+        config-opts:
+          - -DBUILD_SHARED_LIBS=ON
+          - -DBUILD_TESTING=OFF
+          - -Wno-dev
+        sources:
+          - type: archive
+            url: https://github.com/capnproto/capnproto/archive/v0.10.1/capnproto-0.10.1.tar.gz
+            sha256: 2e9c918f02c198557c75ca7c635fe281337c9755b752a6ab3a841bcc1cf5176b
+            x-checker-data:
+              type: anitya
+              project-id: 11515
+              stable-only: true
+              url-template: https://github.com/capnproto/capnproto/archive/v$version/capnproto-$version.tar.gz
+        cleanup:
+          - /bin
+      - name: libfishsound
+        config-opts:
+          - --enable-static=no
+        sources:
+          - type: archive
+            url: https://github.com/kfish/libfishsound/archive/1.0.0/libfishsound-1.0.0.tar.gz
+            sha256: b422429c873f2d7ceb906384e173852981b2d9f11f4d4fabe21f4e462fd2eb64
+            x-checker-data:
+              type: anitya
+              project-id: 230926
+              stable-only: true
+              url-template: https://github.com/kfish/libfishsound/archive/$version/libfishsound-$version.tar.gz
+        cleanup:
+          - /share/doc
+      - name: libid3tag
+        buildsystem: cmake
+        sources:
+          - type: archive
+            url: https://github.com/tenacityteam/libid3tag/archive/0.16.2/libid3tag-0.16.2.tar.gz
+            sha256: 96198b7c8803bcda44e299615e1929a85bd5a5da02e67ebc442735bc50018190
+            x-checker-data:
+              type: anitya
+              project-id: 256428
+              stable-only: true
+              url-template: https://github.com/tenacityteam/libid3tag/archive/$version/libid3tag-$version.tar.gz
+      - name: liblrdf
+        config-opts:
+          - --disable-static
+        sources:
+          - type: archive
+            url: https://github.com/swh/LRDF/archive/v0.6.1/LRDF-0.6.1.tar.gz
+            sha256: d579417c477ac3635844cd1b94f273ee2529a8c3b6b21f9b09d15f462b89b1ef
+            x-checker-data:
+              type: anitya
+              project-id: 229589
+              stable-only: true
+              url-template: https://github.com/swh/LRDF/archive/v$version/LRDF-$version.tar.gz
+        cleanup:
+          # TODO: should this be kept or packaged as a LinuxAudio plugin
+          - /share/ladspa
+        modules:
+          - name: raptor
+            buildsystem: cmake
+            build-options:
+              cflags: -fPIC
+              cxxflags: -fPIC
+            config-opts:
+              - -DBUILD_SHARED_LIBS=ON
+            sources:
+              - type: archive
+                url: https://github.com/dajobe/raptor/archive/3cca62a33da68143b687c9e486eefc7c7cbb4586/raptor-3cca62a33da68143b687c9e486eefc7c7cbb4586.tar.gz
+                sha256: 69d80dbf01b92f1cb7cfd212fbf18dd2281e4101d2d3f9946d3cd346fdb603fc
+                x-checker-data:
+                  type: anitya
+                  project-id: 4162
+                  stable-only: true
+                  # TODO: drop the versions prop when a new release will be tagged
+                  # forcing newer releases than the current latest to avoid carrying patches, like the CVE-2017-18926 fix
+                  versions:
+                    '>': '2.0.15'
+                 #url-template: https://github.com/dajobe/raptor/archive/raptor2_${version0}_${version1}_${version2}/raptor-$version.tar.gz
+                  url-template: https://download.librdf.org/source/raptor2-$version.tar.gz
+            cleanup:
+              - /bin
+              - /share/man
+      - name: liboggz
+        config-opts:
+          - --enable-static=no
+        sources:
+          - type: archive
+            url: https://ftp.osuosl.org/pub/xiph/releases/liboggz/liboggz-1.1.1.tar.gz
+            sha256: 6bafadb1e0a9ae4ac83304f38621a5621b8e8e32927889e65a98706d213d415a
+            x-checker-data:
+              type: anitya
+              project-id: 15133
+              stable-only: true
+              url-template: https://ftp.osuosl.org/pub/xiph/releases/liboggz/liboggz-$version.tar.gz
+        cleanup:
+          - /bin
+          - /share/doc
+          - /share/man
+#     - name: mlton
+#       # TODO: add module? how to bootstrap on aarch without remote?
+#       no-autogen: true
+#       make-args:
+#         - BOOTSTRAP_STYLE=1
+#       sources:
+#         - type: archive
+#           url: https://github.com/MLton/mlton/archive/refs/tags/on-20201002-release.tar.gz
+#           sha256: 630839fea71586ffa77f06962cec323227b8b7913992d04126563e07bdbbafaa
+      - name: portaudio
+        # TODO: after the cpp bindings split, switch to cmake, drop makeflag, and add a separate module for cpp bindings, see https://github.com/PortAudio/portaudio/issues/548
+        config-opts:
+          - --enable-cxx
+          - --disable-static
+        make-args:
+          - -j1
+        sources:
+          - type: archive
+            url: https://github.com/PortAudio/portaudio/archive/v19.7.0/portaudio-19.7.0.tar.gz
+            sha256: 5af29ba58bbdbb7bbcefaaecc77ec8fc413f0db6f4c4e286c40c3e1b83174fa0
+            x-checker-data:
+              # hopefully portaudio finally uses sane version naming scheme
+              # TODO: portaudio.com is down, so anitya entry for the github repo was created. might be better to switch to html checker when it will be up
+              type: anitya
+              project-id: 256432
+              stable-only: true
+              url-template: https://github.com/PortAudio/portaudio/archive/v$version/portaudio-$version.tar.gz
+        modules:
+          - name: pipewire-jack-runtime
+            # TODO: possibly remove when runtime is rebased against freedesktop 22.08, see https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/issues/1012
+            buildsystem: simple
+            build-commands:
+              - install -Dm644 *.h -t ${FLATPAK_DEST}/include/jack/
+              - sed -i "s|@@PREFIX@@|"${FLATPAK_DEST}"|;s|@@ARCH@@|"${FLATPAK_ARCH}"|" pipewire-jack-runtime.pc
+              - _LIBDIR=${FLATPAK_DEST}/lib; [ ${FLATPAK_DEST} == '/usr' ] && _LIBDIR+=/${FLATPAK_ARCH}-linux-gnu;
+                install -Dm644 pipewire-jack-runtime.pc ${_LIBDIR}/pkgconfig/jack.pc
+            sources:
+              - type: git
+                url: https://github.com/jackaudio/headers
+                branch: master
+                commit: 4e53c8f0a33e9ed87eac5ca6e578b7ee92a1fd3d
+              - type: file
+                path: pipewire-jack-runtime.pc
+      - name: rubberband
+        # TODO: evaluate plugin options: ladspa (enabled), lvs (disabled), vamp (disabled)
+        buildsystem: meson
+        config-opts:
+          - -Ddefault_library=shared
+          - -Dfft=fftw
+          - -Dresampler=libsamplerate
+        sources:
+          - type: archive
+            url: https://github.com/breakfastquay/rubberband/archive/v2.0.2/rubberband-2.0.2.tar.gz
+            sha256: 1372a0d52915ef07aa3cffc00a8b17996c736f328efa0f6504d231fa6428ed4b
+            x-checker-data:
+              type: anitya
+              project-id: 4222
+              stable-only: true
+              url-template: https://github.com/breakfastquay/rubberband/archive/v$version/rubberband-$version.tar.gz
+        cleanup:
+          - /bin
+          # TODO: should this be kept or packaged as a LinuxAudio plugin
+          - /lib/ladspa
+          - /share/ladspa
+#       modules:
+#         - name: vamp-plugin-sdk
+      - name: sord
+        buildsystem: simple
+        build-commands:
+          - ./waf configure --prefix=${FLATPAK_DEST}
+          - ./waf build
+          - ./waf install
+        sources:
+          - type: archive
+            url: https://download.drobilla.net/sord-0.16.10.tar.bz2
+            sha256: 9c70b3fbbb0c5c7bf761ef66c3d5b939ab45ad063e055990f17f40f1f6f96572
+            x-checker-data:
+              type: anitya
+              project-id: 230536
+              stable-only: true
+              url-template: https://download.drobilla.net/sord-$version.tar.bz2
+        cleanup:
+          - /bin
+          - /share/man
+        modules:
+          - name: serd
+            buildsystem: simple
+            build-commands:
+              - ./waf configure --prefix=${FLATPAK_DEST}
+              - ./waf build
+              - ./waf install
+            sources:
+              - type: archive
+                url: https://download.drobilla.net/serd-0.30.12.tar.bz2
+                sha256: 9f9dab4125d88256c1f694b6638cbdbf84c15ce31003cd83cb32fb2192d3e866
+                x-checker-data:
+                  type: anitya
+                  project-id: 230531
+                  stable-only: true
+                  url-template: https://download.drobilla.net/serd-$version.tar.bz2
+            cleanup:
+              - /bin
+              - /share/man
