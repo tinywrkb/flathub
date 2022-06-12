@@ -202,7 +202,7 @@ modules:
           - /lib/ladspa
           - /share/ladspa
 #       modules:
-#         - name: vamp-plugin-sdk
+# TODO    - name: vamp-plugin-sdk
       - name: sord
         buildsystem: simple
         build-commands:
