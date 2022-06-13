@@ -1,0 +1,37 @@
+app-id: org.twosheds.iwgtk
+runtime: org.gnome.Platform
+runtime-version: '42'
+sdk: org.gnome.Sdk
+command: iwgtk
+rename-desktop-file: iwgtk.desktop
+rename-icon: iwgtk
+finish-args:
+  - --device=dri
+# TODO: track status icon regression affecting waybar
+# - --own-name=org.kde.*
+  - --own-name=org.twosheds.iwgtk
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --system-talk-name=net.connman.iwd
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+modules:
+  - name: iwgtk
+    no-autogen: true
+    make-install-args:
+      - PREFIX=/app
+    sources:
+      - type: archive
+        url: https://github.com/J-Lentz/iwgtk/archive/v0.5/iwgtk-0.5.tar.gz
+        sha256: 5465721f79090d342c389c8748ba6ef679fa83ae5ed23cea90bcb4e1b9017689
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/J-Lentz/iwgtk/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/J-Lentz/iwgtk/archive/v" + $version + "/iwgtk-"
+            + $version + ".tar.gz"'
+    cleanup:
+      - /lib/systemd
+      - /share/man
