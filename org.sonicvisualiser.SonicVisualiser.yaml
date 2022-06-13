@@ -1,16 +1,13 @@
-# TODO: re-check if all modules needed
 # TODO: figure out how best to handle vamp plugins, see also tenacity's packaging
 #       - https://github.com/tenacityteam/tenacity/issues/25
 #       - https://github.com/tenacityteam/tenacity-flatpak-nightly
 #       - https://github.com/c4dm/vamp-plugin-sdk
-# TODO: pipewire: add socket for jack?, needs updating pipewire access prop?
 # TODO: check qfiledialog usage and issues
 # TODO: evaluate plugins, do they need x11? support ladspa and dssi plugins?
-# TODO: portaudio server access? socket?
-# TODO: monitor dbus access and add proper permissions
-# TODO: do we actually need netowrking? "Open Location..."?
-# TODO: add metainfo
 # TODO: fedc: avoid rebuilding on non important module updates, see https://github.com/flathub/flatpak-external-data-checker/pull/276
+# TODO: make sure that non of the removed /bin executable are actually needed
+# TODO: metainfo: use a smaller screenshot, max is 900x600px according to 'appstream-util validate'
+# TODO: add mimetype: *.svl, *.sv
 app-id: org.sonicvisualiser.SonicVisualiser
 runtime: org.kde.Platform
 runtime-version: 5.15-21.08
@@ -20,10 +17,17 @@ rename-desktop-file: sonic-visualiser.desktop
 rename-icon: sonic-visualiser
 finish-args:
   - --device=dri
-  - --share=ipc
+  # TODO: re-evaluate this after runtime (and pipewire) update
+  - --filesystem=xdg-run/pipewire-0:ro  # pipewire-jack
+  - --share=ipc # x11
+  - --share=network # osc control and opening remote urls
   - --socket=fallback-x11
   - --socket=pulseaudio
   - --socket=wayland
+  - --talk-name=com.canonical.AppMenu.Registrar # kde global menu
+# TODO: does the app actually need these?
+# - --talk-name=org.kde.KGlobalSettings
+# - --talk-name=org.kde.kconfig.notify
 cleanup:
   - /include
   - /lib/cmake
@@ -34,6 +38,8 @@ cleanup:
 modules:
   - name: sonic-visualiser
     buildsystem: meson
+    post-install:
+      - install -Dm644 ../${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo/
     sources:
       - type: archive
         url: https://github.com/sonic-visualiser/sonic-visualiser/releases/download/sv_v4.5/sonic-visualiser-4.5.tar.gz
@@ -44,6 +50,8 @@ modules:
           url: https://api.github.com/repos/sonic-visualiser/sonic-visualiser/releases/latest
           version-query: .tag_name | sub("^sv_v"; "")
           url-query: .assets[] | select(.name=="sonic-visualiser-" + $version + ".tar.gz") | .browser_download_url
+      - type: file
+        path: org.sonicvisualiser.SonicVisualiser.metainfo.xml
     modules:
       - shared-modules/libmad/libmad.json
       - shared-modules/linux-audio/fftw3f.json

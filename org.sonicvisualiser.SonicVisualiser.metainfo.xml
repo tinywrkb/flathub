@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.sonicvisualiser.SonicVisualiser</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-only</project_license>
+  <name>Sonic Visualiser</name>
+  <summary>Visualisation, analysis, and annotation of music audio recordings</summary>
+  <description>
+    <p>Sonic Visualiser is a free, open source, cross-platform desktop application for music audio visualisation, annotation, and analysis.</p>
+    <p>With Sonic Visualiser you can:</p>
+    <ul>
+      <li>Load audio files in various formats (WAV/AIFF, Ogg, Opus, MP3 etc) and view their waveforms</li>
+      <li>Look at audio visualisations such as spectrogram views, with interactive adjustment of display parameters</li>
+      <li>Annotate audio data by adding labelled time points and defining segments, point values and curves</li>
+      <li>Run feature-extraction plugins to calculate annotations automatically, using algorithms such as beat trackers, pitch detectors and so on (see vamp-plugins.org)</li>
+      <li>Import annotation data from various text formats and MIDI files</li>
+      <li>Play back the original audio with synthesised annotations, taking care to synchronise playback with the display position</li>
+      <li>Slow down and speed up playback and loop segments of interest, including seamless looping of complex non-contiguous areas</li>
+      <li>Export annotations and audio selections to external files.</li>
+    </ul>
+    <p>Sonic Visualiser can also be controlled remotely using the Open Sound Control (OSC) protocol (if support is compiled in).</p>
+  </description>
+  <url type="homepage">https://sonicvisualiser.org/</url>
+  <url type="bugtracker">https://github.com/sonic-visualiser/sonic-visualiser/issues</url>
+  <url type="help">https://sonicvisualiser.org/documentation.html</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://sonicvisualiser.org/images/sv-3.0-win.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="4.5" date="2022-03-31"/>
+  </releases>
+  <launchable type="desktop-id">org.sonicvisualiser.SonicVisualiser.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+</component>
