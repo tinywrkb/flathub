@@ -1,0 +1,39 @@
+app-id: io.github.serial-studio
+runtime: org.kde.Platform
+runtime-version: 5.15-21.08
+sdk: org.kde.Sdk
+command: serial-studio
+rename-desktop-file: serial-studio.desktop
+rename-icon: serial-studio
+finish-args:
+  - --device=all
+  - --device=dri
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+modules:
+  - name: serial-studio
+    buildsystem: qmake
+    post-install:
+      - |
+        for s in 16 32 128 256 512; do
+          install -Dm644 doc/artwork/Icon.iconset/icon_${s}x${s}.png ${FLATPAK_DEST}/share/icons/hicolor/${s}x${s}/apps/serial-studio.png
+        done
+      - install -Dm644 doc/artwork/Icon.iconset/icon_32x32@2x.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/serial-studio.png
+      - install -Dm644 doc/icon.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/serial-studio.svg
+      - install -Dm644 ${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo/
+    sources:
+      - type: git
+        url: https://github.com/Serial-Studio/Serial-Studio.git
+        tag: v1.1.7
+        commit: f07a144e463355ebf43aad300b0ed8a2153e507c
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/Serial-Studio/Serial-Studio/releases/latest
+          tag-query: .tag_name
+          version-query: $tag | sub("^v"; "")
+          timestamp-query: .published_at
+      - type: file
+        path: io.github.serial-studio.metainfo.xml
