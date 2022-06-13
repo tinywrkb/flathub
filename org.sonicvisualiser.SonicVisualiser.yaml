@@ -171,8 +171,7 @@ modules:
             build-commands:
               - install -Dm644 *.h -t ${FLATPAK_DEST}/include/jack/
               - sed -i "s|@@PREFIX@@|"${FLATPAK_DEST}"|;s|@@ARCH@@|"${FLATPAK_ARCH}"|" pipewire-jack-runtime.pc
-              - _LIBDIR=${FLATPAK_DEST}/lib; [ ${FLATPAK_DEST} == '/usr' ] && _LIBDIR+=/${FLATPAK_ARCH}-linux-gnu;
-                install -Dm644 pipewire-jack-runtime.pc ${_LIBDIR}/pkgconfig/jack.pc
+              - install -Dm644 pipewire-jack-runtime.pc ${FLATPAK_DEST}/lib/pkgconfig/jack.pc
             sources:
               - type: git
                 url: https://github.com/jackaudio/headers
