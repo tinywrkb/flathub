@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Lorien
+GenericName=Note Taking
+Comment=Infinite canvas drawing/whiteboarding app. Made with Godot.
+Icon=com.github.mbrlabs.Lorien
+Exec=Lorien %U
+Terminal=false
+MimeType=application/lorien
+Categories=Graphics
+Keywords=Drawing;Handwriting;Whiteboard
+StartupWMClass=Lorien
