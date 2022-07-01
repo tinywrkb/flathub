@@ -23,8 +23,8 @@ modules:
       - autostartdir=/app/etc/autostart
     sources:
       - type: archive
-        url: https://github.com/J-Lentz/iwgtk/archive/v0.6/iwgtk-0.6.tar.gz
-        sha256: 43e128c1ef123d115cda34a66f9a79b63560e0e7b658a6f34c60ddeb3a740704
+        url: https://github.com/J-Lentz/iwgtk/archive/v0.7/iwgtk-0.7.tar.gz
+        sha256: ab33211e8e65e723bfe9ac3276dd2fcaec50a6fffe06c44d21615e612755e744
         x-checker-data:
           is-main-source: true
           type: json
@@ -36,3 +36,18 @@ modules:
       - /etc
       - /lib/systemd
       - /share/man
+    modules:
+      - name: libqrencode
+        buildsystem: cmake
+        config-opts:
+          - -DWITH_TOOLS=NO
+          - -DBUILD_SHARED_LIBS=YES
+        sources:
+          - type: archive
+            url: https://github.com/fukuchi/libqrencode/archive/v4.1.1/libqrencode-4.1.1.tar.gz
+            sha256: 5385bc1b8c2f20f3b91d258bf8ccc8cf62023935df2d2676b5b67049f31a049c
+            x-checker-data:
+              type: anitya
+              project-id: 12834
+              stable-only: true
+              url-template: https://github.com/fukuchi/libqrencode/archive/v$version/libqrencode-$version.tar.gz
