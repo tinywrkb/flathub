@@ -1,0 +1,8 @@
+{
+    "automerge-flathubbot-prs": false,
+    "disable-external-data-checker": true,
+    "only-arches":
+    [
+        "x86_64"
+    ]
+}

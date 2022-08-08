@@ -1,0 +1,197 @@
+app-id: io.raindrop.Desktop
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '21.08'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node18
+command: raindrop
+finish-args:
+  - --device=dri
+  - --own-name=org.mpris.MediaPlayer2.io.raindrop.Desktop
+  - --require-version=1.8.2
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=x11
+  - --system-talk-name=org.freedesktop.UPower
+  - --talk-name=org.freedesktop.Notifications
+modules:
+  - name: raindrop
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node18/bin:/run/build/raindrop/node_modules/.bin
+      env:
+        HOME: /run/build/raindrop
+        XDG_CACHE_HOME: /run/build/raindrop/flatpak-node/cache
+        npm_config_nodedir: /usr/lib/sdk/node18
+     #build-args:
+     #  - --share=network
+    build-commands:
+      - install -dm755 ${FLATPAK_DEST}/raindrop
+
+#     # test online build
+#     - yarn
+#     - yarn build:linux --publish never
+
+#     # build from source
+#     - HOME=$PWD yarn config --offline set yarn-offline-mirror $FLATPAK_BUILDER_BUILDDIR/flatpak-node/yarn-mirror
+#     - |
+#       source flatpak-node/electron-builder-arch-args.sh
+#       yarn --offline
+#       yarn --offline build:linux --publish never $ELECTRON_BUILDER_ARCH_ARGS
+#     - |
+#       if [ ${FLATPAK_ARCH} == 'x86_64' ]; then
+#         cp -r dist/linux-unpacked/* ${FLATPAK_DEST}/raindrop/
+#       else
+#         cp -r dist/linux-arm64-unpacked/* ${FLATPAK_DEST}/raindrop/
+#       fi
+
+      # use binary release
+     #- bsdtar -Oxf raindrop.deb 'data.tar*' | bsdtar -xf - --strip-components=3 -C ${FLATPAK_DEST}/raindrop
+     #  ./opt/Raindrop
+     #- bsdtar -Oxf raindrop.deb 'data.tar*' | bsdtar -xf - --strip-components=2 -C ${FLATPAK_DEST} ./usr/share/icons
+     #- |
+     #  for f in $(find ${FLATPAK_DEST}/share/icons -name raindrop.png); do
+     #    mv $f $(dirname $f)/${FLATPAK_ID}.png
+     #  done
+      - unsquashfs -quiet -no-progress raindrop.squashfs
+      - rm raindrop.squashfs
+      - rm squashfs-root/{command,desktop-*}.sh
+      - rmdir squashfs-root/data-dir/{icons,sounds,themes} squashfs-root/{data-dir,gnome-platform,scripts}
+      - rm -r squashfs-root/{lib,meta,usr}
+      # TODO: unpack asar
+      - mv squashfs-root/* ${FLATPAK_DEST}/raindrop/
+      - rmdir squashfs-root
+
+      # common
+      - install -Dm755 raindrop -t ${FLATPAK_DEST}/bin/
+      - install -Dm755 stub_sandbox ${FLATPAK_DEST}/raindrop/chrome-sandbox
+      - install -Dm644 ${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications/
+      - install -Dm644 ${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo/
+      - |
+        for s in 16 32 48 64 128 256 512;do
+          install -Dm644 build/linux/${s}x${s}.png ${FLATPAK_DEST}/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png
+        done
+
+    sources:
+      # build from source
+#     - type: git
+#       url: https://github.com/raindropio/desktop
+#       tag: v5.5.10
+#       commit: 4a55e663c1bdc375a33987dca25ba22029c4f8c0
+#       x-checker-data:
+#         is-main-source: true
+#         type: json
+#         url: https://api.github.com/repos/raindropio/desktop/releases/latest
+#         tag-query: .tag_name
+#         version-query: $tag | sub("^v"; "")
+#         timestamp-query: .published_at
+#     - generated-sources.json # $ flatpak-node-generator.py yarn --recursive --xdg-layout yarn.lock
+
+      # use binary release
+     #- type: file
+     #  dest-filename: raindrop.deb
+     #  only-arches:
+     #    - aarch64
+     #  url: https://github.com/raindropio/desktop/releases/download/v5.5.10/.deb
+     #  sha256: 738c2b2fce65630e284cc891c143ebe44a6940c024ee1ebc9cb600dd95c1c165
+     #  x-checker-data:
+     #    type: json
+     #    url: https://api.github.com/repos/raindropio/desktop/releases/latest
+     #    version-query: .tag_name | sub("^v"; "")
+     #    url-query: '"https://github.com/raindropio/desktop/releases/download/v" + $version + "/" + $version + ".deb"'
+     #- type: file
+     #  dest-filename: raindrop.deb
+     #  only-arches:
+     #    - x86_64
+     #  url: https://github.com/raindropio/desktop/releases/download/v5.5.10/.deb
+     #  sha256: 617334d411987b98a5a1b28cc362aea9a01a0815df62030b879ad7ecee0cd6
+     #  x-checker-data:
+     #    is-main-source: true
+     #    type: json
+     #    url: https://api.github.com/repos/raindropio/desktop/releases/latest
+     #    version-query: .tag_name | sub("^v"; "")
+     #    url-query: '"https://github.com/raindropio/desktop/releases/download/v" + $version + "/" + $version + ".deb"'
+      - type: file
+        dest-filename: raindrop.squashfs
+        only-arches:
+          - x86_64
+        url: https://api.snapcraft.io/api/v1/snaps/download/B8ZjYQVKEem99E5WjVMGUr75feAUrnH5_6.snap
+        sha256: a5bef660d8f1b1366374f9a58ebbb084726b3492c940373d5a16dc019db05c45
+       #size: 76525568
+        x-checker-data:
+          type: snapcraft
+          name: raindrop
+          channel: stable
+      - type: archive
+        # source for icons
+        url: https://github.com/raindropio/desktop/archive/v5.5.10/desktop-5.5.10.tar.gz
+        sha256: 0841d06e2beb6c53c0119768429b04e92d2879df95c38d6807986ba3c918e275
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/raindropio/desktop/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/raindropio/desktop/archive/v" + $version + "/desktop" + $version + ".tar.gz"'
+
+      # common sources
+      - type: script
+        dest-filename: raindrop
+        commands:
+          - export TMPDIR=$XDG_RUNTIME_DIR/app/$FLATPAK_ID
+          - exec zypak-wrapper /app/raindrop/raindrop "$@"
+      - type: script
+        dest-filename: stub_sandbox
+        commands:
+          - |
+            echo Stub sandbox ignoring command: $@
+            exit 1
+      - type: file
+        path: io.raindrop.Desktop.desktop
+      - type: file
+        path: io.raindrop.Desktop.metainfo.xml
+
+    modules:
+      # use binary release
+      - name: unsquashfs
+        no-autogen: true
+        subdir: squashfs-tools
+        make-args:
+          - GZIP_SUPPORT=1
+          - XZ_SUPPORT=1
+          - LZO_SUPPORT=1
+          - LZMA_XZ_SUPPORT=1
+          - LZ4_SUPPORT=1
+          - ZSTD_SUPPORT=1
+          - XATTR_SUPPORT=1
+        make-install-args:
+          - INSTALL_DIR=/app/bin
+        sources:
+          - type: archive
+            url: https://github.com/plougher/squashfs-tools/archive/4.5/squashfs-tools-4.5.tar.gz
+            sha256: b9e16188e6dc1857fe312633920f7d71cc36b0162eb50f3ecb1f0040f02edddd
+            x-checker-data:
+              type: anitya
+              project-id: 4879
+              stable-only: true
+              url-template: https://github.com/plougher/squashfs-tools/archive/$version/squashfs-tools-$version.tar.gz
+        cleanup:
+         #- /bin/mksquashfs
+          - '*'
+        modules:
+          - name: lzo
+            config-opts:
+              - --enable-shared
+            sources:
+              - type: archive
+                url: https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz
+                sha256: c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072
+                x-checker-data:
+                  type: anitya
+                  project-id: 1868
+                  stable-only: true
+                  url-template: https://www.oberhumer.com/opensource/lzo/download/lzo-$version.tar.gz
+            cleanup:
+             #- /share/doc
+              - '*'

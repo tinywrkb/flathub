@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Raindrop.io
+GenericName=Bookmark manager
+Comment=Crossplatform bookmarking app
+Icon=io.raindrop.Desktop
+Exec=raindrop %U
+Terminal=false
+MimeType=x-scheme-handler/rnio
+Categories=GNOME;GTK;Network;Education;Science
+StartupWMClass=Raindrop.io
