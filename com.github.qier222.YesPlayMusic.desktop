@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=YesPlayMusic
+GenericName=Online music streaming player
+Comment=A third party music player for NetEase Cloud Music
+Comment[zh_CN]=高颜值的第三方网易云播放器
+Icon=com.github.qier222.YesPlayMusic
+Exec=yesplaymusic %U
+Terminal=false
+Categories=Audio;Music
+Keywords=NetEase;Music Player
+Keywords[zh_CN]=网易;音乐播放器
+StartupWMClass=YesPlayMusic

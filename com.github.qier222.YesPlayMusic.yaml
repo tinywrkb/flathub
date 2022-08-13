@@ -1,0 +1,272 @@
+# TODO: test yt-dlp and other unblocker features, see https://github.com/UnblockNeteaseMusic/server
+app-id: com.github.qier222.YesPlayMusic
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '21.08'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node16
+command: yesplaymusic
+finish-args:
+  - --device=dri
+  - --own-name=org.mpris.MediaPlayer2.yesplaymusic
+  - --own-name=org.kde.*
+  - --require-version=1.8.2
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=x11
+# NOTE: wayland is waiting on
+#       https://bugs.chromium.org/p/chromium/issues/detail?id=1039161
+#       https://chromium-review.googlesource.com/c/chromium/src/+/3750452
+#       and possibly https://github.com/electron/electron/issues/33690
+#       should enable wayland socket and replace x11 with fallback-x11
+  - --system-talk-name=org.freedesktop.UPower
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+modules:
+  - name: yesplaymusic
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node16/bin:/run/build/yesplaymusic/node_modules/.bin
+      env:
+        HOME: /run/build/yesplaymusic
+        XDG_CACHE_HOME: /run/build/yesplaymusic/flatpak-node/cache
+        npm_config_nodedir: /usr/lib/sdk/node16
+        # https://sharp.pixelplumbing.com/install#custom-prebuilt-binaries
+        # https://github.com/prebuild/prebuild-install
+        npm_config_sharp_local_prebuilds: /run/build/yesplaymusic
+        npm_config_sharp_libvips_local_prebuilds: /run/build/yesplaymusic
+      # build from source (online)
+     #build-args:
+     #  - --share=network
+    build-commands:
+      - install -dm755 ${FLATPAK_DEST}/yesplaymusic
+
+      # build from source (offline)
+      - HOME=$PWD yarn config --offline set yarn-offline-mirror $FLATPAK_BUILDER_BUILDDIR/flatpak-node/yarn-mirror
+      - |
+        set -e
+        source flatpak-node/electron-builder-arch-args.sh
+        yarn --offline
+        yarn --offline electron:build --linux dir $ELECTRON_BUILDER_ARCH_ARGS
+
+      # build from source (online)
+#     - |
+#       set -e
+#       source flatpak-node/electron-builder-arch-args.sh
+#       yarn install
+#       yarn add electron@18
+#       yarn electron:build --linux dir $ELECTRON_BUILDER_ARCH_ARGS
+
+      # build from source (common)
+      - |
+        if [ ${FLATPAK_ARCH} == 'x86_64' ]; then
+          cp -r dist_electron/linux-unpacked/* ${FLATPAK_DEST}/yesplaymusic/
+        else
+          cp -r dist_electron/linux-arm64-unpacked/* ${FLATPAK_DEST}/yesplaymusic/
+        fi
+      - |
+        for s in 16 32 48 64 128 256 512;do
+          install -Dm644 build/icons/${s}x${s}.png ${FLATPAK_DEST}/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png
+        done
+
+      # use binary release (deb)
+      # TODO: unpack asar
+#     - bsdtar -Oxf yesplaymusic.deb 'data.tar*' | bsdtar -xf - --strip-components=3 -C ${FLATPAK_DEST}/yesplaymusic
+#       ./opt/YesPlayMusic
+#     - bsdtar -Oxf yesplaymusic.deb 'data.tar*' | bsdtar -xf - --strip-components=2 --exclude='*/share/icons/hicolor/1024*'
+#       -C ${FLATPAK_DEST} ./usr/share/icons
+#     - |
+#       for f in $(find ${FLATPAK_DEST}/share/icons -name yesplaymusic.png); do
+#         mv $f $(dirname $f)/${FLATPAK_ID}.png
+#       done
+
+      # use binary release (tarball)
+      # TODO: unpack asar
+#     - |
+#       shopt -s extglob
+#       cp -r !(source) ${FLATPAK_DEST}/yesplaymusic/
+#     - |
+#       for s in 16 32 48 64 128 256 512;do
+#         install -Dm644 source/build/icons/${s}x${s}.png ${FLATPAK_DEST}/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png
+#       done
+
+      # common
+      - install -Dm755 yesplaymusic -t ${FLATPAK_DEST}/bin/
+      - install -Dm755 stub_sandbox ${FLATPAK_DEST}/yesplaymusic/chrome-sandbox
+      - install -Dm644 ${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications/
+      - install -Dm644 ${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo/
+
+    sources:
+      # build from source
+      - type: archive
+        url: https://github.com/qier222/YesPlayMusic/archive/v0.4.5/YesPlayMusic-0.4.5.tar.gz
+        sha256: 9af05b6bbdae6f549692b76f8cfaa2d06f537486507e99abcd6058ca324f5d91
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/qier222/YesPlayMusic/archive/v" + $version
+            + "/YesPlayMusic-" + $version + ".tar.gz"'
+      - type: shell
+        commands:
+          - ln -s .env.example .env
+          - sed -i '/asar:/ s/true/false/' vue.config.js
+      - generated-sources.json # $ flatpak-node-generator yarn yarn.lock
+      - type: file
+        dest-filename: package.json
+        path: yesplaymusic-electron18-package.json
+      - type: file
+        dest-filename: yarn.lock
+        path: yesplaymusic-electron18-yarn.lock
+      # prebuilt sharp binaries
+      - type: file
+        only-arches:
+          - aarch64
+        #dest: .npm/_prebuilds
+        url: https://github.com/lovell/sharp/releases/download/v0.29.3/sharp-v0.29.3-napi-v5-linux-arm64.tar.gz
+        sha256: e62e0ad57feb1b45d9d586b6e9590fd89511a5d9f586177604a5b8152ae9523c
+        x-checker-data:
+          type: anitya
+          project-id: 277498
+          versions:
+            ==: 0.29.3
+          url-template: https://github.com/lovell/sharp/releases/download/v$version/sharp-v$version-napi-v5-linux-arm64.tar.gz
+      - type: file
+        only-arches:
+          - x86_64
+        #dest: .npm/_prebuilds
+        url: https://github.com/lovell/sharp/releases/download/v0.29.3/sharp-v0.29.3-napi-v5-linux-x64.tar.gz
+        sha256: cc2475d675d546447d416a66d3a4afceb945287d1b6dca3de79c3597d1f22943
+        x-checker-data:
+          type: anitya
+          project-id: 277498
+          versions:
+            ==: 0.29.3
+          url-template: https://github.com/lovell/sharp/releases/download/v$version/sharp-v$version-napi-v5-linux-x64.tar.gz
+      - type: file
+        only-arches:
+          - aarcn64
+        #dest: .npm/_prebuilds
+        url: https://github.com/lovell/sharp-libvips/releases/download/v8.11.3/libvips-8.11.3-linux-arm64v8.tar.gz
+        sha256: 8e91754779b0f49f629aca555b190f1f1e127116b7d0f6ce1d5c384eb93514fa
+        x-checker-data:
+          type: anitya
+          project-id: 277501
+          versions:
+            ==: 8.11.3
+          url-template: https://github.com/lovell/sharp-libvips/releases/download/v$version/libvips-$version-linux-arm64v8.tar.gz
+      - type: file
+        only-arches:
+          - x86_64
+        #dest: .npm/_prebuilds
+        url: https://github.com/lovell/sharp-libvips/releases/download/v8.11.3/libvips-8.11.3-linux-x64.tar.gz
+        sha256: 99461274fd95ac94f8b69790ab6475288676d6f1d958eb8cf4c172767d6bc7e1
+        x-checker-data:
+          type: anitya
+          project-id: 277501
+          versions:
+            ==: 8.11.3
+          url-template: https://github.com/lovell/sharp-libvips/releases/download/v$version/libvips-$version-linux-x64.tar.gz
+      - type: file
+        only-arches:
+          - aarch64
+        dest: .npm/_libvips
+        url: https://github.com/lovell/sharp-libvips/releases/download/v8.11.3/libvips-8.11.3-linux-arm64v8.tar.br
+        sha256: a304a914c7b90100d40d7cd07d72ba7232843675af83493e25b31c9e9adcd8b0
+        x-checker-data:
+          type: anitya
+          project-id: 277501
+          versions:
+            ==: 8.11.3
+          url-template: https://github.com/lovell/sharp-libvips/releases/download/v$version/libvips-$version-linux-arm64v8.tar.br
+      - type: file
+        only-arches:
+          - x86_64
+        dest: .npm/_libvips
+        url: https://github.com/lovell/sharp-libvips/releases/download/v8.11.3/libvips-8.11.3-linux-x64.tar.br
+        sha256: 8bd437c59e857d2e82a99184b54eb9211b5df28bfce703e31830b8714d9efa4c
+        x-checker-data:
+          type: anitya
+          project-id: 277501
+          versions:
+            ==: 8.11.3
+          url-template: https://github.com/lovell/sharp-libvips/releases/download/v$version/libvips-$version-linux-x64.tar.br
+
+      # use binary release (deb)
+#     - type: file
+#       dest-filename: yesplaymusic.deb
+#       only-arches:
+#         - aarch64
+#       url: https://github.com/qier222/YesPlayMusic/releases/download/v0.4.5/yesplaymusic_0.4.5_arm64.deb
+#       sha256: e8c66b009197b8427d1cc5237b7a694f3dab75a072770a1028193a69ff35a53d
+#       x-checker-data:
+#         type: json
+#         url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/qier222/YesPlayMusic/releases/download/v" + $version + "/yesplaymusic_" + $version + "_arm64.deb"'
+#     - type: file
+#       dest-filename: yesplaymusic.deb
+#       only-arches:
+#         - x86_64
+#       url: https://github.com/qier222/YesPlayMusic/releases/download/v0.4.5/yesplaymusic_0.4.5_amd64.deb
+#       sha256: 8a0776333223c0348e2cfd178b699226710f1967a776080f0bf3304c3083ba2d
+#       x-checker-data:
+#         is-main-source: true
+#         type: json
+#         url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/qier222/YesPlayMusic/releases/download/v" + $version + "/yesplaymusic_" + $version + "_amd64.deb"'
+
+      # use binary release (tarball)
+#     - type: archive
+#       only-arches:
+#         - aarch64
+#       url: https://github.com/qier222/YesPlayMusic/releases/download/v0.4.5/yesplaymusic-0.4.5-arm64.tar.gz
+#       sha256: 43cd838aed9580d51a76d86627f333ab504e6a7d0a4898837a688ea03356c496
+#       x-checker-data:
+#         type: json
+#         url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/qier222/YesPlayMusic/releases/download/v" + $version + "/yesplaymusic-" + $version + "-arm64.tar.gz"'
+#     - type: archive
+#       only-arches:
+#         - x86_64
+#       url: https://github.com/qier222/YesPlayMusic/releases/download/v0.4.5/yesplaymusic-0.4.5.tar.gz
+#       sha256: 3d6547da7f483c61c2b35ca8fb26c06e8785fee08cc73939c1ac21b5f87f48e3
+#       x-checker-data:
+#         is-main-source: true
+#         type: json
+#         url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/qier222/YesPlayMusic/releases/download/v" + $version + "/yesplaymusic-" + $version + ".tar.gz"'
+#     - type: archive
+#       # source for icons when using tarball binary release
+#       dest: source
+#       url: https://github.com/qier222/YesPlayMusic/archive/v0.4.5/YesPlayMusic-0.4.5.tar.gz
+#       sha256: 9af05b6bbdae6f549692b76f8cfaa2d06f537486507e99abcd6058ca324f5d91
+#       x-checker-data:
+#         type: json
+#         url: https://api.github.com/repos/qier222/YesPlayMusic/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/qier222/YesPlayMusic/archive/v" + $version + "/YesPlayMusic-" + $version + ".tar.gz"'
+
+      # common sources
+      - type: script
+        dest-filename: yesplaymusic
+        commands:
+          - export TMPDIR=$XDG_RUNTIME_DIR/app/$FLATPAK_ID
+          - exec zypak-wrapper /app/yesplaymusic/yesplaymusic "$@"
+      - type: script
+        dest-filename: stub_sandbox
+        commands:
+          - |
+            echo Stub sandbox ignoring command: $@
+            exit 1
+      - type: file
+        path: com.github.qier222.YesPlayMusic.desktop
+      - type: file
+        path: com.github.qier222.YesPlayMusic.metainfo.xml
