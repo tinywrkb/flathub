@@ -1,0 +1,101 @@
+app-id: org.upscayl.app
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '21.08'
+command: upscayl
+finish-args:
+  - --device=dri
+# TODO: revisit filesystem access
+# - --filesystem=home
+# - --filesystem=xdg-download
+# - --filesystem=xdg-pictures
+  - --require-version=1.8.2
+  - --share=ipc
+  - --socket=pulseaudio
+  - --socket=x11
+  - --system-talk-name=org.freedesktop.UPower
+  - --talk-name=org.freedesktop.Notifications
+modules:
+  - name: upscayl
+    buildsystem: simple
+    build-commands:
+      # extract bundle, see https://github.com/flatpak/flatpak/issues/126
+      - ostree init --mode=bare-user-only --repo=bundle-repo
+      - ostree static-delta apply-offline --repo=bundle-repo upscayl.flatpak
+      - ostree checkout --repo=bundle-repo $(echo bundle-repo/objects/*/*.commit | sed 's#bundle-repo/objects/\(.*\)\.commit#\1#;s#/##') bundle-checkout
+      - cp -r bundle-checkout/files/lib/org.upscayl.app ${FLATPAK_DEST}/lib/
+      - install -Dm755 upscayl -t ${FLATPAK_DEST}/bin/
+      - install -Dm755 stub_sandbox ${FLATPAK_DEST}/lib/${FLATPAK_ID}/chrome-sandbox
+      - desktop-file-edit --set-key=Exec --set-value=upscayl bundle-checkout/files/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 bundle-checkout/files/share/applications/${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications/
+      - cp -r bundle-checkout/files/share/icons ${FLATPAK_DEST}/share/
+      # TODO: add appstream metainfo
+     #- install -Dm644 ${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo/
+    sources:
+      # TODO: aarch64 release
+#     - type: file
+#       dest-filename: upscayl.flatpak
+#       only-arches:
+#         - aarch64
+#       url: https://github.com/upscayl/upscayl/releases/download/v1.2.0/Upscayl-1.2.0-arm64.flatpak
+#       sha256: 7e5a8a811dd09553c4d58460a112aa9113ce7e91f7716c9ca93858686921e876
+#       x-checker-data:
+#         type: json
+#         url: https://api.github.com/repos/upscayl/upscayl/releases/latest
+#         version-query: .tag_name | sub("^v"; "")
+#         url-query: '"https://github.com/upscayl/upscayl/releases/download/v" + $version + "/Upscayl-"
+#           + $version + "-arm64.flatpak"'
+      - type: file
+        dest-filename: upscayl.flatpak
+        only-arches:
+          - x86_64
+        url: https://github.com/upscayl/upscayl/releases/download/v1.2.0/Upscayl-1.2.0-x86_64.flatpak
+        sha256: 7e5a8a811dd09553c4d58460a112aa9113ce7e91f7716c9ca93858692680e876
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/upscayl/upscayl/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/upscayl/upscayl/releases/download/v" + $version + "/Upscayl-"
+            + $version + "-x86_64.flatpak"'
+      - type: script
+        dest-filename: upscayl
+        commands:
+          - export TMPDIR=$XDG_RUNTIME_DIR/app/$FLATPAK_ID
+          - exec zypak-wrapper /app/lib/org.upscayl.app/upscayl "$@"
+      - type: script
+        dest-filename: stub_sandbox
+        commands:
+          - |
+            echo Stub sandbox ignoring command: $@
+            exit 1
+#     - type: file
+#       path: org.upscayl.app.metainfo.xml
+    modules:
+      - name: ostree
+        config-opts:
+          - --libexec=${prefix}/lib
+          - --disable-glibtest
+          - --disable-gtk-doc
+          - --disable-gtk-doc-html
+          - --disable-http2
+          - --disable-introspection
+          - --disable-man
+          - --disable-rofiles-fuse
+          - --without-avahi
+          - --without-libmount
+          - --without-libsystemd
+          - --without-selinux
+        sources:
+          - type: archive
+            url: https://github.com/ostreedev/ostree/releases/download/v2022.5/libostree-2022.5.tar.xz
+            sha256: 914c4d993bc111d7dd30ae9721b6ffe8ab56eb1fd6e81b097b09f400cc1b053f
+            x-checker-data:
+              type: anitya
+              project-id: 10899
+              stable-only: true
+              url-template: https://github.com/ostreedev/ostree/releases/download/v$version/libostree-$version.tar.xz
+        cleanup:
+          - '*'
