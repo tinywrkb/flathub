@@ -91,13 +91,13 @@ modules:
         buildsystem: cmake
         sources:
           - type: archive
-            url: https://github.com/tenacityteam/libid3tag/archive/0.16.2/libid3tag-0.16.2.tar.gz
-            sha256: 96198b7c8803bcda44e299615e1929a85bd5a5da02e67ebc442735bc50018190
+            url: https://codeberg.org/tenacityteam/libid3tag/archive/0.16.2.tar.gz
+            sha256: 02721346d554c4b4aa3966b134152be65eb4df1fb9322d2d019133238d2ba017
             x-checker-data:
               type: anitya
               project-id: 256428
               stable-only: true
-              url-template: https://github.com/tenacityteam/libid3tag/archive/$version/libid3tag-$version.tar.gz
+              url-template: https://codeberg.org/tenacityteam/libid3tag/archive/$version.tar.gz
       - name: liblrdf
         config-opts:
           - --disable-static
@@ -181,10 +181,9 @@ modules:
               - sed -i "s|@@PREFIX@@|"${FLATPAK_DEST}"|;s|@@ARCH@@|"${FLATPAK_ARCH}"|" pipewire-jack-runtime.pc
               - install -Dm644 pipewire-jack-runtime.pc ${FLATPAK_DEST}/lib/pkgconfig/jack.pc
             sources:
-              - type: git
-                url: https://github.com/jackaudio/headers
-                branch: master
-                commit: 4e53c8f0a33e9ed87eac5ca6e578b7ee92a1fd3d
+              - type: archive
+                url: https://github.com/jackaudio/headers/archive/4e53c8f0a33e9ed87eac5ca6e578b7ee92a1fd3d.tar.gz
+                sha256: 873abd30c494a4b1d45edbdf12f6ca49d870da4e0fc6d987f1ae508b5c99fb6a
               - type: file
                 path: pipewire-jack-runtime.pc
       - name: rubberband
